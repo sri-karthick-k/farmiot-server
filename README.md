@@ -5,7 +5,12 @@
 ## install latest version of postgreSQL and configure password and username 
 
 ## login to postgres using,
+```bash
 psql -U username 
+```
+### Open the ```.env``` file and edit the contents of username, password and port
+
+---
 
 CREATE A DATABASE USING,
 
@@ -24,6 +29,7 @@ So, you can inject the statements using,
 ```bash
 psql -U <username> -d farmiot -f database.sql
 ```
+---
 
 Now, coming back to node.js, after installing necessary packages using ```npm install```,
 Install nodemon using,
