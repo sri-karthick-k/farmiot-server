@@ -2,9 +2,25 @@ const express = require("express")
 const app = express();
 const cors = require("cors");
 const pool = require("./dbConnect")
+const jwt = require('jsonwebtoken')
+
+const secretKey = process.env.AUTH_KEY;
 
 app.use(cors())
 app.use(express.json())
+
+// Middleware to authenticate JWT tokens
+const authenticateJWT = (req, res, next) => {
+    const token = req.header('Authorization');
+    if (!token) return res.sendStatus(401);
+  
+    jwt.verify(token, secretKey, (err, user) => {
+      if (err) return res.sendStatus(403);
+      req.user = user;
+      next();
+    });
+  };
+  
 
 app.get("/api/test", async(req, res)=>{
     let msg = [{success: "Successful API request"}, {failure: "Failed API request!"}]
@@ -19,16 +35,23 @@ app.post("/api/login", async(req, res)=>{
     try {
         const {email, password} = req.body
         const result = await pool.query("SELECT uid FROM user_details WHERE email=($1) AND password=($2)", [email, password])
-        if(result.rows != 0){
+        console.log("Hello");
+        const user = result.rows[0];
+        if(user){
             if(email == "admin@mail.com")
                 result.rows[0].type = "admin"
-            return res.json(result.rows)
+            const token = jwt.sign({ id: user.uid, useremail: user.email }, secretKey);
+            return res.send(token)
         }
         return res.sendStatus(404);
     } catch (err) {
         return res.status(500).send(err.message);
     }
 })
+
+app.get('/api/authenticate', authenticateJWT, (req, res) => {
+    res.json({ message: 'Valid User 👍' });
+  });
 
 app.post("/api/add-tenant", async(req, res)=> {
     try{
