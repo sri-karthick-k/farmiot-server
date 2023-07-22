@@ -73,6 +73,27 @@ app.post("/api/add-tenant", async(req, res)=> {
     }
 })
 
+app.post("/api/add-user", async(req, res)=> {
+    try{
+        const {name, email, password, address, mobile, adminid} = req.body;
+        // Should add company, date_of_register
+        const result = await pool.query("SELECT name FROM user_details WHERE email=($1)", [email]) 
+        if(result.length > 0){
+            return res.status(300).send("Email already exists!!");
+        } else {
+        //     Insert Statement for admin & tenant to user
+        const result2 = await pool.query("INSERT INTO user_details(name, email, password, address, mobile) VALUES ($1, $2, $3, $4, $5) RETURNING uid", [name, email, password, address, mobile]);
+
+        const result3 = await pool.query("INSERT INTO user_role_management(uid, admin_id, role) VALUES($1, $2, $3)", [result2.rows[0].uid, adminid, "user"])
+
+        return res.status(200).send(result2.rows[0].uid)
+        }
+    } catch (err){
+        return res.status(500).send(err.message)
+    }
+})
+
+
 
 
 app.listen("4001", () => {
