@@ -79,7 +79,31 @@ app.post("/api/add-tenant-user", async (req, res) => {
         return res.status(500).json({ error: err.message });
     }
 })
+app.post("/api/add-device", async(req, res)=>{
+    try {
+        const { device_id, lat, longi, descr, uid } = req.body;
+        // Should add company, date_of_register
+        const result = await pool.query("SELECT device_id FROM device WHERE device_id=($1)", [device_id])
+        if (result.rowCount = 0) {
 
+            const isValidUserId = await pool.query("SELECT uid FROM user_details WHERE uid=($1)", [uid])
+
+            if (isValidUserId.rowCount > 0) {
+                //     Insert Statement Sensor parameters only if both user and device_id is valid
+                await pool.query("INSERT INTO device(device_id, LOGITUDE,LATITUDE,DESCRIPTION) VALUES ($1, $2, $3, $4)", [device_id, lat, longi, descr]);
+
+                return res.status(200).json({ result: "Success" });
+            } else {
+                return res.status(300).json({ invalidUserId: "UserID not Present...Record Not Inserted" });
+            }
+        } else {
+            return res.status(300).json({ emailExist: "Device already exists!!" });
+            //return res.status(404).json({ emailExist: "Device Does not exists!!" });
+        }
+    } catch (err) {
+        return res.status(500).json({ error: err.message });
+    }
+})
 
 // Will not work unless add-device route is present (try hard coding values into database for adding device)
 app.post("/api/add-sensor-parameter", async(req, res)=>{
