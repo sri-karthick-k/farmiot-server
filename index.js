@@ -92,7 +92,7 @@ app.post("/api/add-sensor-parameter", async(req, res)=>{
 
             if (isValidUserId.rowCount > 0) {
                 //     Insert Statement Sensor parameters only if both user and device_id is valid
-                const result2 = await pool.query("INSERT INTO sensor_parameters(device_id, sensor_id, key, minValue, maxValue, siunit) VALUES ($1, $2, $3, $4, $5) RETURNING uid", [device_id, sensor_id, key, minValue, maxValue, siunit]);
+                await pool.query("INSERT INTO sensor_parameters(device_id, sensor_id, key, minValue, maxValue, siunit) VALUES ($1, $2, $3, $4, $5, $6)", [device_id, sensor_id, key, minValue, maxValue, siunit]);
 
                 return res.status(200).json({ result: "Success" });
             } else {
