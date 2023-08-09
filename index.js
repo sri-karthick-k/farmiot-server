@@ -81,15 +81,14 @@ app.post("/api/add-tenant-user", async (req, res) => {
 })
 app.post("/api/add-device", async(req, res)=>{
     try {
-        const { device_id, lat, longi, descr, uid } = req.body;
-        // Should add company, date_of_register
+        const { device_id, lat, longi, descr, uid } = req.body;        
         const result = await pool.query("SELECT device_id FROM device WHERE device_id=($1)", [device_id])
-        if (result.rowCount = 0) {
+        if (result.rowCount == 0) {
 
             const isValidUserId = await pool.query("SELECT uid FROM user_details WHERE uid=($1)", [uid])
 
             if (isValidUserId.rowCount > 0) {
-                //     Insert Statement Sensor parameters only if both user and device_id is valid
+                //     Insert Statement Device parameters 
                 await pool.query("INSERT INTO device(device_id, LOGITUDE,LATITUDE,DESCRIPTION) VALUES ($1, $2, $3, $4)", [device_id, lat, longi, descr]);
 
                 return res.status(200).json({ result: "Success" });
@@ -97,8 +96,8 @@ app.post("/api/add-device", async(req, res)=>{
                 return res.status(300).json({ invalidUserId: "UserID not Present...Record Not Inserted" });
             }
         } else {
-            return res.status(300).json({ emailExist: "Device already exists!!" });
-            //return res.status(404).json({ emailExist: "Device Does not exists!!" });
+            return res.status(300).json({ DeviceExist: "Device already exists!!" });
+            
         }
     } catch (err) {
         return res.status(500).json({ error: err.message });
