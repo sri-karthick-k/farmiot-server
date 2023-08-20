@@ -163,13 +163,23 @@ app.post("/api/add-sensor-value", async(req, res)=>{
     }
 })
 
-app.get("/api/get-sensor-value", async(req, res)=>{
+app.post("/api/get-sensor-value", async(req, res)=>{
     try {
-        const {uid, device_id, } = req.header;
+        const uid = req.header("uid");
+        const device_id = req.header("device_id")
+        const result = await pool.query("SELECT uid from device_management where uid = ($1) and device_id=($2) and access='true';", [uid, device_id]);
+
+        if(result.rowCount === 0) {
+            return res.status(404).json({error: "No access"})
+        } else{
+            const devices = await pool.query("SELECT * from device where device_id = ($1);", [device_id])
+            return res.status(200).json(devices.rows)
+        }
     } catch (err) {
         return res.status(500).json({error: err.message});
     }
 })
+
 app.listen("4001", () => {
     console.log("Server running at 4001")
 })
