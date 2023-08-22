@@ -170,9 +170,9 @@ app.get("/api/get-devices", async(req, res)=>{
         const result = await pool.query("SELECT uid from device_management where uid = ($1) and device_id=($2) and access='true';", [uid, device_id]);
 
         if(result.rowCount === 0) {
-            return res.status(404).json({error: "No access"})
+            return res.status(401).json({error: "No access"})
         } else{
-            const devices = await pool.query("SELECT * from device where device_id = ($1);", [device_id])
+            const devices = await pool.query("SELECT * from device;")
             return res.status(200).json(devices.rows)
         }
     } catch (err) {
