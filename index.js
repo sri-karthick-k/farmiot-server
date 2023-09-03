@@ -166,8 +166,8 @@ app.post("/api/add-sensor-value", async(req, res)=>{
 app.get("/api/get-devices", async(req, res)=>{
     try {
         const uid = req.header("user_id");
-        const device_id = req.header("device_id")
-        const result = await pool.query("SELECT uid from device_management where uid = ($1) and device_id=($2) and access='true';", [uid, device_id]);
+        // const device_id = req.header("device_id")
+        const result = await pool.query("SELECT device_id from device_management where uid = ($1) and access='true';", [uid]);
 
         if(result.rowCount === 0) {
             return res.status(401).json({error: "No access"})
@@ -182,7 +182,7 @@ app.get("/api/get-devices", async(req, res)=>{
 
 app.get("/api/get-sensor-params", async(req, res) => {
     try {
-        const user_id = req.header("user_id")
+        // const user_id = req.header("user_id")
         const device_id = req.header("device_id")
         const sensor_params = await pool.query("SELECT * FROM sensor_parameters where device_id=($1);", [device_id])
         
