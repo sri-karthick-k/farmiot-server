@@ -192,6 +192,17 @@ app.get("/api/get-sensor-params", async(req, res) => {
     }
 })
 
+app.get("/api/get-sensor-value", async(req, res) => {
+    try {
+        const sensor_id = req.header("sensor_id")
+        const sensor_value = await pool.query("select * from sensor_value where sensor_id = $1 order by id desc limit 1;", [sensor_id])
+        
+        return res.status(200).json(sensor_value.rows)
+    } catch (err) {
+        return res.status(500).json({error: err.message})
+    }
+})
+
 app.listen("4001", () => {
     console.log("Server running at 4001")
 })
