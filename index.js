@@ -35,13 +35,12 @@ app.post("/api/login", async (req, res) => {
     try {
         const { email, password } = req.body
         const result = await pool.query("SELECT uid FROM user_details WHERE email=($1) AND password=($2)", [email, password])
-        console.log("Hello");
         const user = result.rows[0];
         if (user) {
             if (email == "admin@mail.com")
                 result.rows[0].type = "admin"
-            const token = jwt.sign({ id: user.uid, useremail: user.email }, secretKey);
-            return res.send(token)
+            const token = jwt.sign({ id: user.uid, useremail: email }, secretKey);
+            return res.status(200).json({"token" : token})
         }
         return res.sendStatus(404);
     } catch (err) {
