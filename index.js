@@ -64,7 +64,7 @@ app.post("/api/add-tenant-user", async (req, res) => {
             const isValidAdminId = await pool.query("SELECT uid FROM user_details WHERE uid=($1)", [adminid])
             
             if (isValidAdminId.rowCount > 0) {
-                //     Insert Statement for admin to tenant
+                //     Insert Statement for adding tenant and user
                 const result2 = await pool.query("INSERT INTO user_details(name, email, password, address, mobile) VALUES ($1, $2, $3, $4, $5) RETURNING uid", [name, email, password, address, mobile]);
 
                 const result3 = await pool.query("INSERT INTO user_role_management(uid, admin_id, role) VALUES($1, $2, $3)", [result2.rows[0].uid, adminid, role])
@@ -78,6 +78,7 @@ app.post("/api/add-tenant-user", async (req, res) => {
         return res.status(500).json({ error: err.message });
     }
 })
+
 app.post("/api/add-device", async(req, res)=>{
     try {
         const { device_id, lat, longi, descr, uid } = req.body;        
@@ -197,6 +198,17 @@ app.get("/api/get-sensor-value", async(req, res) => {
         const sensor_value = await pool.query("select * from sensor_value where sensor_id = $1 order by id desc limit 1;", [sensor_id])
         
         return res.status(200).json(sensor_value.rows)
+    } catch (err) {
+        return res.status(500).json({error: err.message})
+    }
+})
+
+app.get("/api/get-tenant-user", async(req, res) => {
+    try {
+        const role = req.header("role")
+        const user = await pool.query("select * from user_details where uid in (select uid from user_details where role=$1);", [role])
+        
+        return res.status(200).json(user.rows)
     } catch (err) {
         return res.status(500).json({error: err.message})
     }
