@@ -40,7 +40,7 @@ app.post("/api/login", async (req, res) => {
             if (email == "admin@mail.com")
                 result.rows[0].type = "admin"
             const token = jwt.sign({ id: user.uid, useremail: email }, secretKey);
-            return res.status(200).json({"token" : token, "type": result.rows[0].type})
+            return res.status(200).json({"token" : token, "type": result.rows[0].type, "uid": result.rows[0].uid})
         }
         return res.sendStatus(404);
     } catch (err) {
