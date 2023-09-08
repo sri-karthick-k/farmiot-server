@@ -81,7 +81,8 @@ app.post("/api/add-tenant-user", async (req, res) => {
 
 app.post("/api/add-device", async(req, res)=>{
     try {
-        const { device_id, lat, longi, descr, uid } = req.body;        
+        const { device_id, lat, longi, descr, uid } = req.body;  
+        console.log(device_id, lat, longi, descr, uid)      
         const result = await pool.query("SELECT device_id FROM device WHERE device_id=($1)", [device_id])
         if (result.rowCount == 0) {
 
@@ -90,7 +91,7 @@ app.post("/api/add-device", async(req, res)=>{
             if (isValidUserId.rowCount > 0) {
                 //     Insert Statement Device parameters 
                 await pool.query("INSERT INTO device(device_id, LOGITUDE,LATITUDE,DESCRIPTION) VALUES ($1, $2, $3, $4)", [device_id, lat, longi, descr]);
-
+                await pool.query("INSERT INTO device_management(uid, device_id, access) VALUES ($1, $2, $3)", [uid, device_id, 'true'])
                 return res.status(200).json({ result: "Success" });
             } else {
                 return res.status(300).json({ invalidUserId: "UserID not Present...Record Not Inserted" });
