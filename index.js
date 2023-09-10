@@ -82,7 +82,6 @@ app.post("/api/add-tenant-user", async (req, res) => {
 app.post("/api/add-device", async(req, res)=>{
     try {
         const { device_id, lat, longi, descr, uid } = req.body;  
-        console.log(device_id, lat, longi, descr, uid)      
         const result = await pool.query("SELECT device_id FROM device WHERE device_id=($1)", [device_id])
         if (result.rowCount == 0) {
 
@@ -167,14 +166,24 @@ app.post("/api/add-sensor-value", async(req, res)=>{
 app.get("/api/get-devices", async(req, res)=>{
     try {
         const uid = req.header("user_id");
-        // const device_id = req.header("device_id")
-        const result = await pool.query("SELECT device_id from device_management where uid = ($1) and access='true';", [uid]);
+        const typeOfuser = await pool.query("SELECT role from user_role_management where uid=($1)", [uid])
 
-        if(result.rowCount === 0) {
-            return res.status(401).json({error: "No access"})
-        } else{
-            const devices = await pool.query("SELECT * from device;")
+        if(typeOfuser.rows[0].role === "admin"){
+            
+            const devices = await pool.query("SELECT * FROM device;")
             return res.status(200).json(devices.rows)
+
+        } 
+        else {
+
+            const result = await pool.query("SELECT device_id from device_management where uid = ($1) and access='true';", [uid]);
+            if(result.rowCount === 0) {
+                return res.status(401).json({error: "No devices"})
+            } else{
+                const deviceIds = result.rows.map((row) => row.device_id);
+                const devices = await pool.query("SELECT * from device where device_id = any ($1);", [deviceIds]) // modify here
+                return res.status(200).json(devices.rows)
+            }
         }
     } catch (err) {
         return res.status(500).json({error: err.message});
