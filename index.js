@@ -207,7 +207,7 @@ app.get("/api/get-sensor-value", async(req, res) => {
 app.get("/api/get-tenant-user", async(req, res) => {
     try {
         const role = req.header("role")
-        const user = await pool.query("select * from user_details where uid in (select uid from user_details where role=$1);", [role])
+        const user = await pool.query("select * from user_details where uid in (select uid from user_role_management where role=$1);", [role])
         
         return res.status(200).json(user.rows)
     } catch (err) {
