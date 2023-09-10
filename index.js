@@ -215,6 +215,16 @@ app.get("/api/get-tenant-user", async(req, res) => {
     }
 })
 
+app.get("/api/get-user", async(req, res) => {
+    try {
+        const uid = req.header("uid")
+        const user = await pool.query("select * from user_details where uid in (select uid from user_role_management where role='user' and admin_id=$1);", [uid])
+        return res.status(200).json(user.rows)
+    } catch (err) {
+        return res.status(500).json({error: err.message})
+    }
+})
+
 app.listen("4001", () => {
     console.log("Server running at 4001")
 })
