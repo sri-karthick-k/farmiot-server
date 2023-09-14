@@ -194,7 +194,10 @@ app.get("/api/get-sensor-params", async(req, res) => {
     try {
         // const user_id = req.header("user_id")
         const device_id = req.header("device_id")
-        const sensor_params = await pool.query("SELECT * FROM sensor_parameters where device_id=($1);", [device_id])
+        const decodedDeviceId = decodeURIComponent(device_id)
+        console.log(decodedDeviceId);
+        const sensor_params = await pool.query("SELECT * FROM sensor_parameters where device_id=($1);", [decodedDeviceId])
+
         
         return res.status(200).json(sensor_params.rows)
     } catch (err) {
@@ -206,8 +209,27 @@ app.get("/api/get-sensor-value", async(req, res) => {
     try {
         const sensor_id = req.header("sensor_id")
         const sensor_value = await pool.query("select * from sensor_value where sensor_id = $1 order by id desc limit 1;", [sensor_id])
-        
+        console.log(sensor_value.rows[0].value);
         return res.status(200).json(sensor_value.rows)
+    } catch (err) {
+        return res.status(500).json({error: err.message})
+    }
+})
+
+app.get("/api/get-sensor-value1", async(req, res) => {
+    try {
+        const device_id = decodeURIComponent(req.header("device_id"))
+        const sensor_params = await pool.query("SELECT * FROM sensor_parameters where device_id=($1);", [device_id])
+        
+        for(let i=0; i<sensor_params.rowCount; i++){
+            const sensor_value = await pool.query("select * from sensor_value where sensor_id = $1 order by id desc limit 1;", [sensor_params.rows[i].sensor_id])
+            sensor_params.rows[i].value = sensor_value.rows[0].value;
+            sensor_params.rows[i].u_time = sensor_value.rows[0].u_time;
+        }
+
+        console.log(sensor_params.rows[1].sensor_id);
+
+        return res.status(200).json(sensor_params.rows)
     } catch (err) {
         return res.status(500).json({error: err.message})
     }
@@ -215,10 +237,21 @@ app.get("/api/get-sensor-value", async(req, res) => {
 
 app.get("/api/get-tenant-user", async(req, res) => {
     try {
+        const uid = req.header("uid")
         const role = req.header("role")
-        const user = await pool.query("select * from user_details where uid in (select uid from user_role_management where role=$1);", [role])
+
+
+        const typeOfUser = await pool.query("SELECT role from user_role_management where uid=($1)", [uid])
+
+
+        if(typeOfUser.rows[0].role === "admin"){
+            const user = await pool.query("select * from user_details where uid in (select uid from user_role_management where role=$1);", [role])
+            return res.status(200).json(user.rows)
+        } else {
+            const user = await pool.query("select * from user_details where uid in (select uid from user_role_management where role=($1) and admin_id=($2));", [role, uid])
+            return res.status(200).json(user.rows)
+        }
         
-        return res.status(200).json(user.rows)
     } catch (err) {
         return res.status(500).json({error: err.message})
     }
