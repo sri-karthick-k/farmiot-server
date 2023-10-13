@@ -57,24 +57,38 @@ app.post("/api/add-tenant-user", async (req, res) => {
         const { name, email, password, address, company, mobile, adminid, role = "user" } = req.body;
         // Should add company, date_of_register
         const result = await pool.query("SELECT name FROM user_details WHERE email=($1)", [email])
+        const userQuery = "select role from user_role_management where uid=($1)"
+        const managerQuery = userQuery + " and role ='admin';"
+        const value = [adminid]
+
+        const typeChecker = role === "manager" ? await pool.query(managerQuery, value) : await pool.query(userQuery, value)
+
+        if(typeChecker.rowCount <= 0){
+            return res.status(300).json({ accessDenied: "Sorry you cannot add this type of user" }); 
+        }
+        const adderType = typeChecker.rows[0].role
+        console.log("Adder Type: ", adderType);
+
         if (result.rowCount > 0) {
             return res.status(300).json({ emailExist: "Email already exists!!" });
         } else {
+            if(adderType === "admin" || (adderType === "manager" && role === "user")){
 
-            const isValidAdminId = await pool.query("SELECT uid FROM user_details WHERE uid=($1)", [adminid])
-            
-            if (isValidAdminId.rowCount > 0) {
                 //     Insert Statement for adding tenant and user
                 const result2 = await pool.query("INSERT INTO user_details(name, email, password, address, mobile) VALUES ($1, $2, $3, $4, $5) RETURNING uid", [name, email, password, address, mobile]);
-
+                
                 const result3 = await pool.query("INSERT INTO user_role_management(uid, admin_id, role) VALUES($1, $2, $3)", [result2.rows[0].uid, adminid, role])
-
-                return res.status(200).json({ uid: result2.rows[0].uid });
-            } else {
-                return res.status(300).json({ invalidAdminId: "AdminID not Present...Record Not Inserted" });
+                
+                return res.status(200).json({ uid: result2.rows[0].uid });  
+                
             }
+            else{
+                console.log("accessDenied: Sorry you cannot add this type of user");
+                return res.status(300).json({ accessDenied: "Sorry you cannot add this type of user" });
+            }  
         }
     } catch (err) {
+        console.error(err)
         return res.status(500).json({ error: err.message });
     }
 })
