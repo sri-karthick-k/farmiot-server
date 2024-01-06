@@ -13,7 +13,7 @@ ENV PG_USER postgres
 ENV PG_DB farmiot
 ENV PG_PORT 5432
 ENV PG_PASSWORD 123123
-ENV PG_HOST farm-db
+ENV PG_HOST farm-db-service
 ENV AUTH_KEY 123
 
 # Expose the port
